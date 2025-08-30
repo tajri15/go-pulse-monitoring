@@ -1,0 +1,15 @@
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+vendor/
+go-pulse-monitoring
+
+# Node
+node_modules/
+dist/
+.env
