@@ -1,16 +1,15 @@
-version: '3.8'
-
 services:
   app:
     build: .
     ports:
       - "8080:8080"
     volumes:
-      - .:/app
+      - .:/app 
     depends_on:
       - db
     environment:
       - DB_SOURCE=postgresql://user:password@db:5432/gopulse?sslmode=disable
+      - JWT_SECRET=iniadalahkuncirahasiajwtgopulseyangsangatpanjangdanaman
 
   db:
     image: postgres:15-alpine
@@ -22,6 +21,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+      # TAMBAHKAN BARIS DI BAWAH INI
+      - ./db/migration:/docker-entrypoint-initdb.d 
 
 volumes:
   postgres_data:
