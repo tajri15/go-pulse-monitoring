@@ -16,7 +16,8 @@ func NewStore(conn *pgxpool.Pool) *Store {
 	return &Store{conn: conn}
 }
 
-// Definisikan struct User agar sesuai dengan tabel di database
+// --- User ---
+
 type User struct {
 	ID           int64     `json:"id"`
 	Username     string    `json:"username"`
@@ -31,7 +32,6 @@ type CreateUserParams struct {
 	PasswordHash string `json:"password_hash"`
 }
 
-// Method untuk membuat user baru
 func (s *Store) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
 	query := `INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email, password_hash, created_at`
 	
@@ -42,7 +42,6 @@ func (s *Store) CreateUser(ctx context.Context, arg CreateUserParams) (User, err
 	return u, err
 }
 
-// Method untuk mendapatkan user berdasarkan email
 func (s *Store) GetUserByEmail(ctx context.Context, email string) (User, error) {
 	query := `SELECT id, username, email, password_hash, created_at FROM users WHERE email = $1 LIMIT 1`
 	
@@ -53,7 +52,8 @@ func (s *Store) GetUserByEmail(ctx context.Context, email string) (User, error) 
 	return u, err
 }
 
-// Definisikan struct Site
+// --- Site ---
+
 type Site struct {
 	ID        int64     `json:"id"`
 	UserID    int64     `json:"user_id"`
@@ -66,7 +66,6 @@ type CreateSiteParams struct {
 	URL    string `json:"url"`
 }
 
-// Method untuk membuat site baru
 func (s *Store) CreateSite(ctx context.Context, arg CreateSiteParams) (Site, error) {
 	query := `INSERT INTO sites (user_id, url) VALUES ($1, $2) RETURNING id, user_id, url, created_at`
 	
@@ -77,7 +76,6 @@ func (s *Store) CreateSite(ctx context.Context, arg CreateSiteParams) (Site, err
 	return site, err
 }
 
-// Method untuk mendapatkan semua site milik seorang user
 func (s *Store) GetSitesByUserID(ctx context.Context, userID int64) ([]Site, error) {
 	query := `SELECT id, user_id, url, created_at FROM sites WHERE user_id = $1 ORDER BY created_at DESC`
 	
@@ -98,7 +96,6 @@ func (s *Store) GetSitesByUserID(ctx context.Context, userID int64) ([]Site, err
 	return sites, nil
 }
 
-// Method untuk menghapus site, dengan verifikasi kepemilikan
 func (s *Store) DeleteSite(ctx context.Context, siteID int64, userID int64) error {
 	query := `DELETE FROM sites WHERE id = $1 AND user_id = $2`
 	
@@ -110,4 +107,52 @@ func (s *Store) DeleteSite(ctx context.Context, siteID int64, userID int64) erro
 		return errors.New("site not found or user not authorized to delete")
 	}
 	return nil
+}
+
+// --- HealthCheck ---
+
+type HealthCheck struct {
+	ID             int64     `json:"id"`
+	SiteID         int64     `json:"site_id"`
+	StatusCode     int       `json:"status_code"`
+	ResponseTimeMs int       `json:"response_time_ms"`
+	IsUp           bool      `json:"is_up"`
+	CheckedAt      time.Time `json:"checked_at"`
+}
+
+func (s *Store) GetAllSites(ctx context.Context) ([]Site, error) {
+	query := `SELECT id, user_id, url, created_at FROM sites`
+	rows, err := s.conn.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	sites := []Site{}
+	for rows.Next() {
+		var site Site
+		if err := rows.Scan(&site.ID, &site.UserID, &site.URL, &site.CreatedAt); err != nil {
+			return nil, err
+		}
+		sites = append(sites, site)
+	}
+	return sites, nil
+}
+
+type CreateHealthCheckParams struct {
+	SiteID         int64 `json:"site_id"`
+	StatusCode     int   `json:"status_code"`
+	ResponseTimeMs int   `json:"response_time_ms"`
+	IsUp           bool  `json:"is_up"`
+}
+
+func (s *Store) CreateHealthCheck(ctx context.Context, arg CreateHealthCheckParams) (HealthCheck, error) {
+	query := `INSERT INTO health_checks (site_id, status_code, response_time_ms, is_up) VALUES ($1, $2, $3, $4) 
+              RETURNING id, site_id, status_code, response_time_ms, is_up, checked_at`
+
+	row := s.conn.QueryRow(ctx, query, arg.SiteID, arg.StatusCode, arg.ResponseTimeMs, arg.IsUp)
+
+	var hc HealthCheck
+	err := row.Scan(&hc.ID, &hc.SiteID, &hc.StatusCode, &hc.ResponseTimeMs, &hc.IsUp, &hc.CheckedAt)
+	return hc, err
 }
