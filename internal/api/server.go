@@ -5,16 +5,27 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/tajri15/go-pulse-monitoring/internal/db"
+	"github.com/tajri15/go-pulse-monitoring/internal/ws"
 )
 
 type Server struct {
 	store  *db.Store
+	hub    *ws.Hub
 	router *gin.Engine
 }
 
-func NewServer(store *db.Store) *Server {
-	server := &Server{store: store}
+// Modifikasi NewServer untuk menerima Hub
+func NewServer(store *db.Store, hub *ws.Hub) *Server {
+	server := &Server{
+		store: store,
+		hub:   hub,
+	}
 	router := gin.Default()
+    
+	// Endpoint WebSocket (tidak perlu dilindungi middleware karena punya auth sendiri)
+	router.GET("/ws", func(c *gin.Context) {
+		ws.ServeWs(server.hub, c)
+	})
 
 	// Rute publik untuk autentikasi
 	authRoutes := router.Group("/api/auth")

@@ -9,6 +9,7 @@ import (
 	"github.com/tajri15/go-pulse-monitoring/internal/api"
 	"github.com/tajri15/go-pulse-monitoring/internal/db"
 	"github.com/tajri15/go-pulse-monitoring/internal/worker"
+	"github.com/tajri15/go-pulse-monitoring/internal/ws"
 )
 
 func main() {
@@ -28,13 +29,18 @@ func main() {
 	// Membuat instance dari store database
 	store := db.NewStore(conn)
 
+	// Inisialisasi Hub untuk WebSocket
+	hub := ws.NewHub()
+	// Jalankan Hub di background sebagai goroutine
+	go hub.Run()
+
 	// Inisialisasi checker
 	checker := worker.NewChecker(store)
-	// Jalankan checker di background sebagai goroutine agar tidak memblokir server API
+	// Jalankan checker di background sebagai goroutine
 	go checker.Start()
 
-	// Inisialisasi dan jalankan server API di foreground
-	server := api.NewServer(store)
+	// Inisialisasi dan jalankan server API dengan menyertakan Hub
+	server := api.NewServer(store, hub)
 	err = server.Start("0.0.0.0:8080")
 	if err != nil {
 		log.Fatalf("Could not start server: %v", err)
