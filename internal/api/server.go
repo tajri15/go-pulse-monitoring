@@ -16,11 +16,19 @@ func NewServer(store *db.Store) *Server {
 	server := &Server{store: store}
 	router := gin.Default()
 
-	// Definisikan rute API di sini
+	// Rute publik untuk autentikasi
 	authRoutes := router.Group("/api/auth")
 	{
 		authRoutes.POST("/register", server.registerUser)
 		authRoutes.POST("/login", server.loginUser)
+	}
+
+	// Rute yang dilindungi oleh middleware otentikasi
+	api := router.Group("/api").Use(authMiddleware())
+	{
+		api.POST("/sites", server.createSite)
+		api.GET("/sites", server.listSites)
+		api.DELETE("/sites/:id", server.deleteSite)
 	}
 
 	server.router = router
