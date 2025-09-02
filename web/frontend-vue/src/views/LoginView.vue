@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, RouterLink } from 'vue-router'; // Pastikan RouterLink di-import
 
 const email = ref('');
 const password = ref('');
@@ -22,16 +22,11 @@ const handleLogin = async () => {
     });
 
     const data = await response.json();
-
     if (!response.ok) {
       throw new Error(data.error || 'Login failed');
     }
-
-    // Simpan token ke localStorage
     localStorage.setItem('jwt_token', data.token);
-    // Arahkan ke dashboard
     router.push('/');
-
   } catch (err) {
     errorMsg.value = err.message;
   }
@@ -58,6 +53,12 @@ const handleLogin = async () => {
           Login
         </button>
       </form>
+      <div class="text-center mt-4">
+        <p class="text-sm">
+          Belum punya akun? 
+          <RouterLink to="/register" class="font-medium text-blue-600 hover:underline">Daftar di sini</RouterLink>
+        </p>
+      </div>
     </div>
   </div>
 </template>
