@@ -34,8 +34,8 @@ func main() {
 	// Jalankan Hub di background sebagai goroutine
 	go hub.Run()
 
-	// Inisialisasi checker
-	checker := worker.NewChecker(store)
+	// Inisialisasi checker dengan menyertakan Hub
+	checker := worker.NewChecker(store, hub) 
 	// Jalankan checker di background sebagai goroutine
 	go checker.Start()
 
