@@ -7,11 +7,13 @@ const email = ref('');
 const password = ref('');
 const errorMsg = ref(null);
 const successMsg = ref(null);
+const isLoading = ref(false);
 const router = useRouter();
 
 const handleRegister = async () => {
   errorMsg.value = null;
   successMsg.value = null;
+  isLoading.value = true;
   try {
     const response = await fetch('http://localhost:8080/api/auth/register', {
       method: 'POST',
@@ -26,12 +28,10 @@ const handleRegister = async () => {
     });
 
     const data = await response.json();
-
     if (!response.ok) {
       throw new Error(data.error || 'Registration failed');
     }
 
-    // Tampilkan pesan sukses dan arahkan ke halaman login setelah beberapa saat
     successMsg.value = 'Registration successful! Redirecting to login...';
     setTimeout(() => {
       router.push('/login');
@@ -39,43 +39,84 @@ const handleRegister = async () => {
 
   } catch (err) {
     errorMsg.value = err.message;
+  } finally {
+    isLoading.value = false;
   }
 };
 </script>
 
 <template>
-  <div class="flex items-center justify-center min-h-screen">
-    <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-      <h1 class="text-2xl font-bold text-center">Create Go-Pulse Account</h1>
-      <form @submit.prevent="handleRegister" class="space-y-6">
-        <div>
-          <label for="username" class="block text-sm font-medium">Username</label>
-          <input v-model="username" type="text" id="username" required class="w-full px-3 py-2 mt-1 border rounded-md focus:outline-none focus:ring focus:ring-blue-200">
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+       <div>
+        <div class="flex justify-center">
+          <div class="rounded-full bg-white shadow-md p-4 border border-gray-100">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
         </div>
-        <div>
-          <label for="email" class="block text-sm font-medium">Email</label>
-          <input v-model="email" type="email" id="email" required class="w-full px-3 py-2 mt-1 border rounded-md focus:outline-none focus:ring focus:ring-blue-200">
-        </div>
-        <div>
-          <label for="password" class="block text-sm font-medium">Password</label>
-          <input v-model="password" type="password" id="password" required minlength="6" class="w-full px-3 py-2 mt-1 border rounded-md focus:outline-none focus:ring focus:ring-blue-200">
-        </div>
-        <div v-if="errorMsg" class="text-red-500 text-sm text-center">
-          {{ errorMsg }}
-        </div>
-        <div v-if="successMsg" class="text-green-500 text-sm text-center">
-          {{ successMsg }}
-        </div>
-        <button type="submit" class="w-full px-4 py-2 font-bold text-white bg-blue-600 rounded-md hover:bg-blue-700">
-          Register
-        </button>
-      </form>
-       <div class="text-center mt-4">
-        <p class="text-sm">
-          Sudah punya akun? 
-          <RouterLink to="/login" class="font-medium text-blue-600 hover:underline">Login di sini</RouterLink>
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Create your account
+        </h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+          Join Go-Pulse to start monitoring
         </p>
       </div>
+      
+      <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+        <form class="space-y-6" @submit.prevent="handleRegister">
+          <div class="relative">
+            <label for="username" class="sr-only">Username</label>
+             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" /></svg>
+            </div>
+            <input id="username" v-model="username" type="text" required 
+              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              placeholder="Username">
+          </div>
+          <div class="relative">
+            <label for="email" class="sr-only">Email</label>
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" /></svg>
+            </div>
+            <input id="email" v-model="email" type="email" required 
+              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              placeholder="Email address">
+          </div>
+          <div class="relative">
+            <label for="password" class="sr-only">Password</label>
+             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            </div>
+            <input id="password" v-model="password" type="password" required minlength="6"
+              class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              placeholder="Password (min. 6 characters)">
+          </div>
+
+          <div v-if="errorMsg" class="rounded-md bg-red-50 p-4 text-sm text-red-700">{{ errorMsg }}</div>
+          <div v-if="successMsg" class="rounded-md bg-green-50 p-4 text-sm text-green-700">{{ successMsg }}</div>
+
+          <div>
+            <button type="submit" :disabled="isLoading"
+              class="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition shadow-lg hover:shadow-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed">
+              <svg v-if="isLoading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{ isLoading ? 'Creating account...' : 'Create account' }}
+            </button>
+          </div>
+        </form>
+      </div>
+
+       <div class="text-center mt-6">
+          <p class="text-sm">
+            <RouterLink to="/login" class="font-medium text-blue-600 hover:text-blue-500 transition-colors">
+              Already have an account? Sign in
+            </RouterLink>
+          </p>
+        </div>
     </div>
   </div>
 </template>

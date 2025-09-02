@@ -165,18 +165,42 @@ const formatDate = (date) => {
   if (!date) return 'Checking...';
   return new Date(date).toLocaleString();
 };
+
+const getStatusColor = (status) => {
+  if (status === true) return 'bg-green-500';
+  if (status === false) return 'bg-red-500';
+  return 'bg-gray-400';
+};
+
+const getStatusText = (status) => {
+  if (status === true) return 'Online';
+  if (status === false) return 'Offline';
+  return 'Pending';
+};
 </script>
 
 <template>
   <div class="min-h-screen bg-gray-50">
-    <nav class="bg-white shadow-sm sticky top-0 z-10">
+    <!-- Header yang diperbaiki -->
+    <nav class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-          <div class="flex-shrink-0 flex items-center">
-            <h1 class="text-xl font-bold text-blue-600">Go-Pulse</h1>
+        <div class="flex justify-between h-16 items-center">
+          <div class="flex items-center">
+            <div class="w-8 h-8 bg-blue-600 rounded-md flex items-center justify-center mr-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <h1 class="text-xl font-semibold text-gray-900">Go-Pulse</h1>
           </div>
           <div class="flex items-center">
-            <button @click="handleLogout" class="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">
+            <button 
+              @click="handleLogout" 
+              class="flex items-center text-sm text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md hover:bg-gray-100 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
               Logout
             </button>
           </div>
@@ -184,77 +208,111 @@ const formatDate = (date) => {
       </div>
     </nav>
 
+    <!-- Konten utama -->
     <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <!-- Form untuk menambah monitor -->
       <div class="px-4 py-6 sm:px-0">
-        <div class="bg-white p-6 rounded-lg shadow">
-          <h2 class="text-lg font-medium mb-4">Add a new monitor</h2>
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <h2 class="text-lg font-medium text-gray-900 mb-4">Add a new monitor</h2>
           <form @submit.prevent="handleAddSite" class="space-y-4">
-            <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
-              <div class="flex-grow">
-                <label for="check_target" class="block text-sm font-medium">Target</label>
-                <input v-model="newCheckTarget" type="text" :placeholder="newCheckType === 'TCP' ? 'example.com:443' : 'https://example.com'" required class="w-full px-3 py-2 mt-1 border rounded-md">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="md:col-span-2">
+                <label for="check_target" class="block text-sm font-medium text-gray-700 mb-1">Target URL</label>
+                <input 
+                  v-model="newCheckTarget" 
+                  type="text" 
+                  :placeholder="newCheckType === 'TCP' ? 'example.com:443' : 'https://example.com'" 
+                  required 
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                >
               </div>
               <div>
-                <label for="check_type" class="block text-sm font-medium">Type</label>
-                <select v-model="newCheckType" id="check_type" class="w-full px-3 py-2 mt-1 border rounded-md h-full">
+                <label for="check_type" class="block text-sm font-medium text-gray-700 mb-1">Check Type</label>
+                <select 
+                  v-model="newCheckType" 
+                  id="check_type" 
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                >
                   <option>HTTP</option>
                   <option>KEYWORD</option>
                   <option>TCP</option>
                 </select>
               </div>
             </div>
+            
             <div v-if="newCheckType === 'KEYWORD'">
-              <label for="check_keyword" class="block text-sm font-medium">Keyword to find</label>
-              <input v-model="newCheckKeyword" type="text" placeholder="e.g., Copyright" required class="w-full px-3 py-2 mt-1 border rounded-md">
+              <label for="check_keyword" class="block text-sm font-medium text-gray-700 mb-1">Keyword to find</label>
+              <input 
+                v-model="newCheckKeyword" 
+                type="text" 
+                placeholder="e.g., Copyright" 
+                required 
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+              >
             </div>
+            
             <p v-if="errorMsg" class="text-red-500 text-sm">{{ errorMsg }}</p>
-            <button type="submit" class="px-4 py-2 font-bold text-white bg-blue-600 rounded-md hover:bg-blue-700">Add Monitor</button>
+            
+            <button 
+              type="submit" 
+              class="px-4 py-2 font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Add Monitor
+            </button>
           </form>
         </div>
       </div>
 
+      <!-- Daftar monitor -->
       <div class="px-4 py-6 sm:px-0">
-        <div class="space-y-4">
-          <div v-if="sites.length === 0" class="text-center text-gray-500 py-8">
-            You are not monitoring any sites yet.
-          </div>
-          <div v-else v-for="site in sites" :key="site.id" class="bg-white p-4 rounded-lg shadow flex items-center justify-between flex-wrap">
-            <div class="flex items-center space-x-4 mb-2 md:mb-0">
-              <span class="flex h-3 w-3 relative">
-                <span v-if="site.is_up === true" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span v-else-if="site.is_up === false" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span :class="{'bg-green-500': site.is_up === true, 'bg-red-500': site.is_up === false, 'bg-gray-400': site.is_up === null}" class="relative inline-flex rounded-full h-3 w-3"></span>
-              </span>
-              <button @click="showHistory(site)" class="font-medium text-blue-600 hover:underline text-left">{{ site.check_target }}</button>
-              <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{{ site.check_type }}</span>
-            </div>
-            <div class="flex items-center space-x-6 text-sm text-gray-600">
-              <span>{{ site.is_up === null ? 'Pending' : `Status: ${site.status_code}` }}</span>
-              <span>{{ site.response_time_ms === undefined ? '' : `Response: ${site.response_time_ms} ms` }}</span>
-              <span class="min-w-[190px]">Last Checked: {{ formatDate(site.last_checked) }}</span>
-              <button @click="handleDeleteSite(site.id)" class="text-red-500 hover:text-red-700 font-semibold">Delete</button>
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Your Monitors</h2>
+        
+        <div v-if="sites.length === 0" class="text-center text-gray-500 py-8 bg-white rounded-lg border border-gray-200">
+          You are not monitoring any sites yet.
+        </div>
+        
+        <div v-else class="grid grid-cols-1 gap-4">
+          <div 
+            v-for="site in sites" 
+            :key="site.id" 
+            class="bg-white p-5 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition"
+          >
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <span class="flex h-3 w-3 relative">
+                  <span v-if="site.is_up === true" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span v-else-if="site.is_up === false" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span :class="{
+                    'bg-green-500': site.is_up === true, 
+                    'bg-red-500': site.is_up === false, 
+                    'bg-gray-400': site.is_up === null
+                  }" class="relative inline-flex rounded-full h-3 w-3"></span>
+                </span>
+                <div>
+                  <h3 class="font-medium text-gray-900">{{ site.check_target }}</h3>
+                  <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">{{ site.check_type }}</span>
+                </div>
+              </div>
+              
+              <div class="flex items-center space-x-4">
+                <div class="text-sm text-gray-600 text-right">
+                  <div v-if="site.status_code">Status: {{ site.status_code }}</div>
+                  <div v-if="site.response_time_ms">Response: {{ site.response_time_ms }} ms</div>
+                  <div>Last Checked: {{ formatDate(site.last_checked) }}</div>
+                </div>
+                <button 
+                  @click="handleDeleteSite(site.id)" 
+                  class="text-red-500 hover:text-red-700 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </main>
-
-    <div v-if="selectedSite" @click.self="closeHistoryModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-      <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl h-full max-h-[70vh] flex flex-col">
-        <div class="p-4 border-b flex justify-between items-center">
-          <h3 class="text-lg font-medium">History: {{ selectedSite.check_target }}</h3>
-          <div class="flex space-x-2">
-            <button @click="changeRange('24h')" :class="{'bg-blue-500 text-white': activeRange === '24h', 'bg-gray-200': activeRange !== '24h'}" class="px-3 py-1 text-sm rounded-md">24 Hours</button>
-            <button @click="changeRange('7d')" :class="{'bg-blue-500 text-white': activeRange === '7d', 'bg-gray-200': activeRange !== '7d'}" class="px-3 py-1 text-sm rounded-md">7 Days</button>
-            <button @click="changeRange('30d')" :class="{'bg-blue-500 text-white': activeRange === '30d', 'bg-gray-200': activeRange !== '30d'}" class="px-3 py-1 text-sm rounded-md">30 Days</button>
-          </div>
-          <button @click="closeHistoryModal" class="text-2xl leading-none text-gray-500 hover:text-gray-800">&times;</button>
-        </div>
-        <div class="p-4 flex-grow relative">
-          <div v-if="isLoadingChart" class="absolute inset-0 flex items-center justify-center text-gray-500">Loading chart data...</div>
-          <UptimeChart v-if="chartData" :chart-data="chartData" />
-        </div>
-      </div>
-    </div>
   </div>
 </template>
